@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARIA – Pro Blogging Agent</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --accent: #6366f1;
+    --accent-glow: rgba(99, 102, 241, 0.2);
+    --text: #f8fafc;
+    --text-dim: #94a3b8;
+    --green: #10b981;
+    --yellow: #f59e0b;
+    --red: #ef4444;
+    --border: rgba(255,255,255,0.1);
+    --glass: rgba(30, 41, 59, 0.7);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Outfit', sans-serif; background:var(--bg); color:var(--text); height:100vh; overflow:hidden; display:flex; flex-direction:column; }
+
+  /* Glassmorphism Scrollbar */
+  ::-webkit-scrollbar { width:6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius:10px; }
+
+  header { 
+    height: 70px; background: var(--glass); backdrop-filter: blur(10px); 
+    border-bottom: 1px solid var(--border); display: flex; align-items: center; 
+    justify-content: space-between; padding: 0 30px; z-index: 100;
+  }
+  .logo { display:flex; align-items:center; gap:12px; }
+  .logo-icon { width:40px; height:40px; background:linear-gradient(45deg, var(--accent), #a855f7); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px; box-shadow: 0 0 20px var(--accent-glow); }
+  .logo h1 { font-size:18px; font-weight:700; background: linear-gradient(to right, #fff, #94a3b8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+
+  .main { display:flex; flex:1; overflow:hidden; }
+
+  /* Sidebar */
+  .sidebar { width:300px; background:var(--glass); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:20px; gap:25px; overflow-y:auto; }
+  .s-section h3 { font-size:11px; text-transform:uppercase; letter-spacing:1.5px; color:var(--accent); margin-bottom:12px; font-weight:700; }
+  
+  .card { background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:16px; padding:15px; }
+  .site-info .url { color:var(--accent); font-size:13px; font-weight:500; word-break:break-all; }
+  .site-info .status { font-size:11px; margin-top:5px; display:block; }
+
+  .stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .stat-box { text-align:center; padding:12px; background:rgba(255,255,255,0.03); border-radius:12px; border:1px solid var(--border); }
+  .stat-box .val { font-size:24px; font-weight:700; color:#fff; }
+  .stat-box .lbl { font-size:10px; color:var(--text-dim); }
+
+  .nav-btn { width:100%; padding:12px; border:1px solid var(--border); border-radius:12px; background:rgba(255,255,255,0.02); color:#fff; text-align:left; font-size:13px; cursor:pointer; margin-bottom:8px; transition:0.3s; display:flex; align-items:center; gap:10px; }
+  .nav-btn:hover { background:var(--accent); border-color:var(--accent); transform:translateX(5px); }
+
+  /* Chat Area */
+  .chat-container { flex:1; display:flex; flex-direction:column; background: radial-gradient(circle at top right, rgba(99,102,241,0.05), transparent 400px); }
+  #chat-msgs { flex:1; overflow-y:auto; padding:30px; display:flex; flex-direction:column; gap:20px; }
+
+  .msg { display:flex; gap:15px; max-width:85%; animation: slideUp 0.4s ease-out; }
+  @keyframes slideUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+  .msg.user { align-self:flex-end; flex-direction:row-reverse; }
+  
+  .avatar { width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+  .msg.bot .avatar { background: var(--accent); }
+  .msg.user .avatar { background: var(--green); }
+
+  .bubble { padding:15px 20px; border-radius:20px; font-size:14px; line-height:1.6; }
+  .msg.bot .bubble { background:var(--card); border:1px solid var(--border); border-top-left-radius:4px; }
+  .msg.user .bubble { background:linear-gradient(135deg, var(--accent), #4f46e5); border-top-right-radius:4px; color:#fff; }
+
+  /* Input Bar */
+  .input-wrapper { padding:20px 30px; background:var(--glass); border-top:1px solid var(--border); display:flex; gap:15px; align-items:center; }
+  #user-input { flex:1; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:15px; padding:12px 20px; color:#fff; font-family:inherit; font-size:15px; outline:none; transition:0.3s; height:50px; resize:none; }
+  #user-input:focus { border-color:var(--accent); background:rgba(255,255,255,0.08); box-shadow: 0 0 15px var(--accent-glow); }
+  #send-btn { width:50px; height:50px; border-radius:15px; background:var(--accent); border:none; color:#fff; cursor:pointer; font-size:20px; transition:0.3s; }
+  #send-btn:hover { transform: scale(1.05); background:#4f46e5; }
+
+  /* Settings Modal */
+  .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); backdrop-filter:blur(8px); z-index:1000; align-items:center; justify-content:center; }
+  .modal-content { background:var(--card); width:450px; border-radius:24px; border:1px solid var(--border); padding:30px; position:relative; }
+  .modal h2 { margin-bottom:20px; font-size:20px; }
+  .form-group { margin-bottom:15px; }
+  .form-group label { display:block; font-size:12px; color:var(--text-dim); margin-bottom:5px; }
+  .form-group input { width:100%; background:rgba(255,255,255,0.05); border:1px solid var(--border); padding:10px 15px; border-radius:10px; color:#fff; outline:none; }
+  .form-group input:focus { border-color:var(--accent); }
+  .save-btn { width:100%; padding:12px; background:var(--accent); border:none; border-radius:12px; color:#fff; font-weight:600; cursor:pointer; margin-top:10px; }
+
+  /* Log Sidebar */
+  #activity-logs { height:180px; background:#020617; border-radius:12px; padding:10px; font-family:monospace; font-size:11px; overflow-y:auto; color:#94a3b8; }
+  .log-entry { margin-bottom:4px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">✨</div>
+    <div>
+      <h1>ARIA Pro Agent</h1>
+    </div>
+  </div>
+  <div style="display:flex; gap:12px;">
+    <div id="wp-badge" class="nav-btn" style="padding:5px 15px; font-size:11px; background:rgba(239,68,68,0.1); color:var(--red); border-color:rgba(239,68,68,0.2);">WP Disconnected</div>
+    <button class="nav-btn" onclick="openSettings()" style="width:auto; padding:5px 15px; margin:0;">⚙️ Settings</button>
+  </div>
+</header>
+
+<div class="main">
+  <div class="sidebar">
+    <div class="s-section">
+      <h3>🌍 Current Target</h3>
+      <div class="card site-info">
+        <div class="url" id="ui-url">Loading...</div>
+        <div class="status" id="ui-niche">Niche: Detecting...</div>
+      </div>
+    </div>
+
+    <div class="s-section">
+      <h3>📈 Performance</h3>
+      <div class="stat-grid">
+        <div class="stat-box"><div class="val" id="ui-kw-count">0</div><div class="lbl">Keywords</div></div>
+        <div class="stat-box"><div class="val" id="ui-blog-count">0</div><div class="lbl">Blogs</div></div>
+      </div>
+    </div>
+
+    <div class="s-section">
+      <h3>🚀 Quick Actions</h3>
+      <button class="nav-btn" onclick="quickAction('Research keywords for my site')">🔍 Research Market</button>
+      <button class="nav-btn" onclick="quickAction('Write a high-ranking SEO blog post')">✍️ Write SEO Post</button>
+      <button class="nav-btn" onclick="quickAction('Analyze competitors')">📊 Competitor Check</button>
+    </div>
+
+    <div class="s-section" style="flex:1;">
+      <h3>🎙️ Live Activity</h3>
+      <div id="activity-logs"></div>
+    </div>
+  </div>
+
+  <div class="chat-container">
+    <div id="chat-msgs">
+      <div class="msg bot">
+        <div class="avatar">✨</div>
+        <div class="bubble"><strong>Welcome back! 👋</strong> I'm ARIA. Main aapki website ki SEO aur content management handle karne ke liye tayyar hun. Kya plan hai aaj ka?</div>
+      </div>
+    </div>
+    
+    <div id="typing" style="display:none; padding:10px 30px; font-size:12px; color:var(--accent);">ARIA is thinking...</div>
+
+    <div class="input-wrapper">
+      <textarea id="user-input" placeholder="Message ARIA..." rows="1"></textarea>
+      <button id="send-btn" onclick="sendMessage()">➤</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div id="settings-modal" class="modal">
+  <div class="modal-content">
+    <button style="position:absolute; right:20px; top:20px; background:none; border:none; color:#fff; cursor:pointer;" onclick="closeSettings()">✕</button>
+    <h2>WordPress Settings</h2>
+    <div class="form-group">
+      <label>Site URL</label>
+      <input type="text" id="wp_url" placeholder="https://yourblog.com">
+    </div>
+    <div class="form-group">
+      <label>WP Username</label>
+      <input type="text" id="wp_user" placeholder="admin">
+    </div>
+    <div class="form-group">
+      <label>App Password</label>
+      <input type="password" id="wp_pass" placeholder="xxxx xxxx xxxx xxxx">
+      <small style="font-size:10px; color:var(--text-dim);">WordPress Dashbord > Users > Edit Profile > Application Passwords</small>
+    </div>
+    <button class="save-btn" onclick="saveSettings()">Save & Connect</button>
+  </div>
+</div>
+
+<script>
+const chatBox = document.getElementById('chat-msgs');
+const input = document.getElementById('user-input');
+const typing = document.getElementById('typing');
+
+input.addEventListener('keydown', (e) => {
+  if(e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+function addMessage(text, role) {
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  div.innerHTML = `
+    <div class="avatar">${role === 'bot' ? '✨' : '👤'}</div>
+    <div class="bubble">${text.replace(/\n/g, '<br>')}</div>
+  `;
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+let displayedHistoryCount = 1; // Start with the welcome msg
+
+async function syncChatHistory() {
+  try {
+    const res = await fetch('/history');
+    const data = await res.json();
+    const serverMsgs = data.history;
+    
+    // If we have more messages on server than displayed
+    if (serverMsgs.length > displayedHistoryCount - 1) {
+       // Clear and re-render to be safe and simple, or just append
+       // Let's just append new ones
+       for(let i = displayedHistoryCount - 1; i < serverMsgs.length; i++) {
+         addMessage(serverMsgs[i].content, serverMsgs[i].role === 'user' ? 'user' : 'bot');
+       }
+       displayedHistoryCount = serverMsgs.length + 1;
+    }
+  } catch(e) {}
+}
+
+// Check every 5 seconds for background updates
+setInterval(syncChatHistory, 5000);
+// Also fetch initial history
+syncChatHistory();
+
+async function sendMessage() {
+  const msg = input.value.trim();
+  if(!msg) return;
+
+  // We add to local UI first
+  addMessage(msg, 'user');
+  displayedHistoryCount++; 
+  
+  input.value = '';
+  typing.style.display = 'block';
+
+  try {
+    const res = await fetch('/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({message: msg})
+    });
+    const data = await res.json();
+    typing.style.display = 'none';
+    
+    addMessage(data.reply, 'bot');
+    displayedHistoryCount++;
+
+    if(data.action) {
+       addMessage(`<i>System: ${data.action.msg}</i>`, 'bot');
+       displayedHistoryCount++;
+    }
+    
+    updateUI();
+  } catch(e) {
+    typing.style.display = 'none';
+    addMessage("❌ Connection Lost.", "bot");
+  }
+}
+
+
+function quickAction(msg) {
+  input.value = msg;
+  sendMessage();
+}
+
+async function updateUI() {
+  try {
+    const res = await fetch('/status');
+    const data = await res.json();
+    
+    document.getElementById('ui-url').innerText = data.profile?.url || "Not set";
+    document.getElementById('ui-niche').innerText = "Niche: " + (data.profile?.niche || "Detecting...");
+    document.getElementById('ui-kw-count').innerText = data.keywords_found;
+    document.getElementById('ui-blog-count').innerText = data.blogs_written;
+    
+    const badge = document.getElementById('wp-badge');
+    if(data.wp_connected) {
+      badge.innerText = "✅ WP Connected";
+      badge.style.background = "rgba(16, 185, 129, 0.1)";
+      badge.style.color = "var(--green)";
+      badge.style.borderColor = "rgba(16, 185, 129, 0.2)";
+    } else {
+      badge.innerText = "🔌 WP Disconnected";
+      badge.style.background = "rgba(239, 68, 68, 0.1)";
+      badge.style.color = "var(--red)";
+      badge.style.borderColor = "rgba(239, 68, 68, 0.2)";
+    }
+  } catch(e) {}
+}
+
+async function fetchLogs() {
+  try {
+    const res = await fetch('/logs');
+    const data = await res.json();
+    const ldiv = document.getElementById('activity-logs');
+    ldiv.innerHTML = (data.logs || []).slice(-15).map(l => `
+      <div class="log-entry">
+        <span style="color:var(--accent)">[${(l.time || '').split(' ')[1] || ''}]</span> ${l.msg}
+      </div>
+    `).join("");
+    ldiv.scrollTop = ldiv.scrollHeight;
+  } catch(e) {}
+}
+
+function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; }
+function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
+
+async function saveSettings() {
+  const btn = document.querySelector('.save-btn');
+  btn.innerText = "Connecting...";
+  
+  const payload = {
+    wp_url: document.getElementById('wp_url').value,
+    wp_user: document.getElementById('wp_user').value,
+    wp_pass: document.getElementById('wp_pass').value
+  };
+  
+  const res = await fetch('/settings', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+  
+  if(data.success) {
+    btn.innerText = data.connected ? "Connected!" : "Saved (No Connection)";
+    setTimeout(() => {
+      closeSettings();
+      updateUI();
+      btn.innerText = "Save & Connect";
+    }, 1500);
+  }
+}
+
+setInterval(updateUI, 5000);
+setInterval(fetchLogs, 2000);
+updateUI();
+</script>
+</body>
+</html>

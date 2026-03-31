@@ -1,0 +1,10 @@
+google-generativeai
+loguru
+requests
+schedule
+python-dotenv
+beautifulsoup4
+lxml
+flask
+flask-cors
+groq

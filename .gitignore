@@ -1,14 +1,20 @@
-aria_env/
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+
+# Environments
 .env
-*.db
-*.sqlite
-data/
-logs/
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Project data
+data/chat_history.json
+data/profile.json
+data/keywords.json
+
 outputs/
-.pytest_cache/
-*.pdf
-roadmap_text.txt
-temp_req.txt
-extract_pdf.py
